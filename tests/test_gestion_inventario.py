@@ -17,11 +17,17 @@ class TestGestionInventarioApp(unittest.TestCase):
         
         # Simulate user input
         entries = self.app.content_frame.winfo_children()
-        entries[1].insert(0, "P001")  # product_id_entry
-        entries[3].insert(0, "10")    # quantity_entry
-        entries[5].insert(0, "Entrada")  # movement_type_entry
-        entries[7].insert(0, "Stock inicial")  # description_entry
-        entries[9].insert(0, "DOC123")  # reference_document_entry
+        product_id_entry = entries[1]
+        quantity_entry = entries[3]
+        movement_type_entry = entries[5]
+        description_entry = entries[7]
+        reference_document_entry = entries[9]
+
+        product_id_entry.insert(0, "P001")
+        quantity_entry.insert(0, "10")
+        movement_type_entry.insert(0, "Entrada")
+        description_entry.insert(0, "Stock inicial")
+        reference_document_entry.insert(0, "DOC123")
         
         # Simulate button click
         entries[10].invoke()
@@ -39,16 +45,24 @@ class TestGestionInventarioApp(unittest.TestCase):
         
         # Simulate user input
         entries = self.app.content_frame.winfo_children()
-        entries[1].insert(0, "Cliente1")  # client_entry
-        entries[3].insert(0, "Efectivo")  # payment_method_entry
+        client_entry = entries[1]
+        payment_method_entry = entries[3]
+        
+        client_entry.insert(0, "Cliente1")
+        payment_method_entry.insert(0, "Efectivo")
         
         # Simulate adding sale details
         sale_details_frame = entries[5]
         sale_details_entries = sale_details_frame.winfo_children()
-        sale_details_entries[1].insert(0, "P001")  # product_id_entry
-        sale_details_entries[3].insert(0, "2")     # quantity_entry
-        sale_details_entries[5].insert(0, "50.0")  # price_unit_entry
-        sale_details_entries[7].insert(0, "5.0")   # discount_entry
+        product_id_entry = sale_details_entries[1]
+        quantity_entry = sale_details_entries[3]
+        price_unit_entry = sale_details_entries[5]
+        discount_entry = sale_details_entries[7]
+
+        product_id_entry.insert(0, "P001")
+        quantity_entry.insert(0, "2")
+        price_unit_entry.insert(0, "50.0")
+        discount_entry.insert(0, "5.0")
         sale_details_entries[8].invoke()  # Add detail button
         
         # Simulate button click
@@ -68,14 +82,20 @@ class TestGestionInventarioApp(unittest.TestCase):
         
         # Simulate user input
         entries = self.app.content_frame.winfo_children()
-        entries[1].insert(0, "Proveedor1")  # supplier_entry
+        supplier_entry = entries[1]
+        
+        supplier_entry.insert(0, "Proveedor1")
         
         # Simulate adding purchase details
         purchase_details_frame = entries[3]
         purchase_details_entries = purchase_details_frame.winfo_children()
-        purchase_details_entries[1].insert(0, "P001")  # product_id_entry
-        purchase_details_entries[3].insert(0, "5")     # quantity_entry
-        purchase_details_entries[5].insert(0, "20.0")  # price_unit_entry
+        product_id_entry = purchase_details_entries[1]
+        quantity_entry = purchase_details_entries[3]
+        price_unit_entry = purchase_details_entries[5]
+
+        product_id_entry.insert(0, "P001")
+        quantity_entry.insert(0, "5")
+        price_unit_entry.insert(0, "20.0")
         purchase_details_entries[6].invoke()  # Add detail button
         
         # Simulate button click
@@ -94,8 +114,11 @@ class TestGestionInventarioApp(unittest.TestCase):
         
         # Simulate user input
         entries = self.app.content_frame.winfo_children()
-        entries[1].insert(0, "2023-01-01")  # start_date_entry
-        entries[3].insert(0, "2023-12-31")  # end_date_entry
+        start_date_entry = entries[1]
+        end_date_entry = entries[3]
+
+        start_date_entry.insert(0, "2023-01-01")
+        end_date_entry.insert(0, "2023-12-31")
         
         # Simulate button click
         entries[4].invoke()
