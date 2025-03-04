@@ -4,12 +4,10 @@ import tkinter as tk
 from gestion_inventario import GestionInventarioApp
 
 class TestGestionInventarioApp(unittest.TestCase):
-    def setUp(self):
-        self.root = tk.Tk()
+    @patch('tkinter.Tk')
+    def setUp(self, mock_tk):
+        self.root = mock_tk()
         self.app = GestionInventarioApp(self.root)
-
-    def tearDown(self):
-        self.root.destroy()
 
     @patch('gestion_inventario.update_inventory')
     @patch('gestion_inventario.messagebox.showinfo')
