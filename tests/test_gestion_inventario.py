@@ -16,12 +16,12 @@ class TestGestionInventarioApp(unittest.TestCase):
         self.app.show_update_inventory()
         
         # Simulate user input
-        entries = self.app.content_frame.winfo_children()
-        product_id_entry = entries[1]
-        quantity_entry = entries[3]
-        movement_type_entry = entries[5]
-        description_entry = entries[7]
-        reference_document_entry = entries[9]
+        entries = [widget for widget in self.app.content_frame.winfo_children() if isinstance(widget, tk.Entry)]
+        product_id_entry = entries[0]
+        quantity_entry = entries[1]
+        movement_type_entry = entries[2]
+        description_entry = entries[3]
+        reference_document_entry = entries[4]
 
         product_id_entry.insert(0, "P001")
         quantity_entry.insert(0, "10")
@@ -30,7 +30,7 @@ class TestGestionInventarioApp(unittest.TestCase):
         reference_document_entry.insert(0, "DOC123")
         
         # Simulate button click
-        entries[10].invoke()
+        self.app.content_frame.winfo_children()[-1].invoke()
         
         mock_update_inventory.assert_called_once_with("P001", 10, "Entrada", "Sistema", "Stock inicial", "DOC123")
         mock_showinfo.assert_called_once_with("Info", "Inventario actualizado.")
@@ -44,29 +44,29 @@ class TestGestionInventarioApp(unittest.TestCase):
         self.app.show_register_sale()
         
         # Simulate user input
-        entries = self.app.content_frame.winfo_children()
-        client_entry = entries[1]
-        payment_method_entry = entries[3]
+        entries = [widget for widget in self.app.content_frame.winfo_children() if isinstance(widget, tk.Entry)]
+        client_entry = entries[0]
+        payment_method_entry = entries[1]
         
         client_entry.insert(0, "Cliente1")
         payment_method_entry.insert(0, "Efectivo")
         
         # Simulate adding sale details
-        sale_details_frame = entries[5]
-        sale_details_entries = sale_details_frame.winfo_children()
-        product_id_entry = sale_details_entries[1]
-        quantity_entry = sale_details_entries[3]
-        price_unit_entry = sale_details_entries[5]
-        discount_entry = sale_details_entries[7]
+        sale_details_frame = self.app.content_frame.winfo_children()[5]
+        sale_details_entries = [widget for widget in sale_details_frame.winfo_children() if isinstance(widget, tk.Entry)]
+        product_id_entry = sale_details_entries[0]
+        quantity_entry = sale_details_entries[1]
+        price_unit_entry = sale_details_entries[2]
+        discount_entry = sale_details_entries[3]
 
         product_id_entry.insert(0, "P001")
         quantity_entry.insert(0, "2")
         price_unit_entry.insert(0, "50.0")
         discount_entry.insert(0, "5.0")
-        sale_details_entries[8].invoke()  # Add detail button
+        sale_details_frame.winfo_children()[-1].invoke()  # Add detail button
         
         # Simulate button click
-        entries[6].invoke()
+        self.app.content_frame.winfo_children()[-1].invoke()
         
         mock_register_sale.assert_called_once_with("Cliente1", "Efectivo", "Sistema")
         mock_add_sale_detail.assert_called_once()
@@ -81,25 +81,25 @@ class TestGestionInventarioApp(unittest.TestCase):
         self.app.show_register_purchase()
         
         # Simulate user input
-        entries = self.app.content_frame.winfo_children()
-        supplier_entry = entries[1]
+        entries = [widget for widget in self.app.content_frame.winfo_children() if isinstance(widget, tk.Entry)]
+        supplier_entry = entries[0]
         
         supplier_entry.insert(0, "Proveedor1")
         
         # Simulate adding purchase details
-        purchase_details_frame = entries[3]
-        purchase_details_entries = purchase_details_frame.winfo_children()
-        product_id_entry = purchase_details_entries[1]
-        quantity_entry = purchase_details_entries[3]
-        price_unit_entry = purchase_details_entries[5]
+        purchase_details_frame = self.app.content_frame.winfo_children()[3]
+        purchase_details_entries = [widget for widget in purchase_details_frame.winfo_children() if isinstance(widget, tk.Entry)]
+        product_id_entry = purchase_details_entries[0]
+        quantity_entry = purchase_details_entries[1]
+        price_unit_entry = purchase_details_entries[2]
 
         product_id_entry.insert(0, "P001")
         quantity_entry.insert(0, "5")
         price_unit_entry.insert(0, "20.0")
-        purchase_details_entries[6].invoke()  # Add detail button
+        purchase_details_frame.winfo_children()[-1].invoke()  # Add detail button
         
         # Simulate button click
-        entries[4].invoke()
+        self.app.content_frame.winfo_children()[-1].invoke()
         
         mock_register_purchase.assert_called_once_with("Proveedor1", "Sistema")
         mock_add_purchase_detail.assert_called_once()
@@ -113,15 +113,15 @@ class TestGestionInventarioApp(unittest.TestCase):
         self.app.show_generate_report()
         
         # Simulate user input
-        entries = self.app.content_frame.winfo_children()
-        start_date_entry = entries[1]
-        end_date_entry = entries[3]
+        entries = [widget for widget in self.app.content_frame.winfo_children() if isinstance(widget, tk.Entry)]
+        start_date_entry = entries[0]
+        end_date_entry = entries[1]
 
         start_date_entry.insert(0, "2023-01-01")
         end_date_entry.insert(0, "2023-12-31")
         
         # Simulate button click
-        entries[4].invoke()
+        self.app.content_frame.winfo_children()[-1].invoke()
         
         mock_generate_sales_report.assert_called_once_with("2023-01-01", "2023-12-31")
         mock_showinfo.assert_called_once()
