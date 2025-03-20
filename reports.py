@@ -1,24 +1,33 @@
 import sqlite3
 from data_manager import fetch_all
 
-def generate_sales_report(start_date, end_date):
+def generate_sales_report(start_date: str, end_date: str) -> dict:
     """
     Genera un informe de ventas para un período específico.
     
     Args:
-        start_date (str): Fecha inicial (formato 'YYYY-MM-DD')
-        end_date (str): Fecha final (formato 'YYYY-MM-DD')
+        start_date (str): Fecha inicial (formato 'YYYY-MM-DD').
+        end_date (str): Fecha final (formato 'YYYY-MM-DD').
         
     Returns:
-        dict: Informe de ventas con estadísticas
+        dict: Informe de ventas con estadísticas, incluyendo:
+            - total_ventas: Total de ventas en el período.
+            - num_ventas: Número de ventas realizadas.
+            - productos_vendidos: Total de productos vendidos.
+            - venta_promedio: Promedio de ventas.
+            - metodos_pago: Métodos de pago utilizados.
+            - productos_populares: Lista de los productos más vendidos.
+            - ventas_por_dia: Ventas agrupadas por día.
     """
+
     # Obtener ventas en el período
     query = '''
     SELECT * FROM sales WHERE Fecha BETWEEN ? AND ? AND Estado = 'Completada'
     '''
     period_sales = fetch_all(query, (start_date, end_date))
     
-    # Si no hay ventas, retornar informe vacío
+    # Si no hay ventas, retornar informe vacío con estructura clara
+
     if not period_sales:
         return {
             "total_ventas": 0,
