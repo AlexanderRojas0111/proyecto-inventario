@@ -1,80 +1,45 @@
-import sqlite3
-from data_manager import fetch_all, fetch_one
+import logging
+from data_manager import execute_query, fetch_one  # Agregada la importación de fetch_one
 
-def authenticate_user(email, password):
-    """Autentica un usuario."""
+def create_user(email: str, password: str, roles: list) -> bool:
+    """Crea un nuevo usuario en la base de datos."""
     try:
-        query = '''
-        SELECT * FROM users WHERE Correo = ? AND Contraseña = ?
-        '''
+        query = "INSERT INTO users (Correo, Contraseña) VALUES (?, ?)"
+        execute_query(query, (email, password))
+        # Aquí se pueden agregar roles si es necesario
+        return True
+    except Exception as e:
+        logging.error(f"Error al crear usuario: {e}")
+        return False
+
+def update_user(email: str, password: str) -> bool:
+    """Actualiza la información de un usuario existente."""
+    try:
+        query = "UPDATE users SET Contraseña = ? WHERE Correo = ?"
+        execute_query(query, (password, email))
+        return True
+    except Exception as e:
+        logging.error(f"Error al actualizar usuario: {e}")
+        return False
+
+def delete_user(email: str) -> bool:
+    """Elimina un usuario de la base de datos."""
+    try:
+        query = "DELETE FROM users WHERE Correo = ?"
+        execute_query(query, (email,))
+        return True
+    except Exception as e:
+        logging.error(f"Error al eliminar usuario: {e}")
+        return False
+
+def authenticate_user(email: str, password: str):
+    """Autentica a un usuario y devuelve su información si es exitoso."""
+    try:
+        query = "SELECT * FROM users WHERE Correo = ? AND Contraseña = ?"
         user = fetch_one(query, (email, password))
         if user:
-            return user
+            return {"Correo": user[0], "Nombre": user[1]}  # Ajustar según la estructura de la tabla
         return None
     except Exception as e:
-        print(f"Error al autenticar usuario: {e}")
+        logging.error(f"Error al autenticar usuario: {e}")
         return None
-
-def get_user_roles(user_id):
-    """Obtiene los roles de un usuario."""
-    try:
-        query = '''
-        SELECT roles.* FROM roles
-        JOIN user_roles ON roles.ID_Rol = user_roles.ID_Rol
-        WHERE user_roles.ID_Usuario = ?
-        '''
-        user_roles_data = fetch_all(query, (user_id,))
-        return user_roles_data
-    except Exception as e:
-        print(f"Error al obtener roles del usuario: {e}")
-        return []
-
-def get_role_permissions(role_id):
-    """Obtiene los permisos de un rol."""
-    try:
-        query = '''
-        SELECT permissions.* FROM permissions
-        JOIN role_permissions ON permissions.ID_Permiso = role_permissions.ID_Permiso
-        WHERE role_permissions.ID_Rol = ?
-        '''
-        role_permissions_data = fetch_all(query, (role_id,))
-        return role_permissions_data
-    except Exception as e:
-        print(f"Error al obtener permisos del rol: {e}")
-        return []
-
-def user_has_permission(user_id, permission_name):
-    """Verifica si un usuario tiene un permiso específico por nombre."""
-    try:
-        query = '''
-        SELECT permissions.* FROM permissions
-        JOIN role_permissions ON permissions.ID_Permiso = role_permissions.ID_Permiso
-        JOIN user_roles ON role_permissions.ID_Rol = user_roles.ID_Rol
-        WHERE user_roles.ID_Usuario = ? AND permissions.Nombre = ?
-        '''
-        permission_data = fetch_all(query, (user_id, permission_name))
-        if permission_data:
-            return True
-        return False
-    except Exception as e:
-        print(f"Error al verificar permisos del usuario: {e}")
-        return False
-
-# Ejemplo de uso (asumiendo que tienes datos en la base de datos):
-if __name__ == "__main__":
-    # Suponiendo que tienes un usuario con ID 1, un rol con ID 1, y un permiso con nombre "editar_productos"
-    user_id = 1
-    permission_name = "editar_productos"
-
-    if user_has_permission(user_id, permission_name):
-        print(f"El usuario {user_id} tiene el permiso {permission_name}.")
-    else:
-        print(f"El usuario {user_id} no tiene el permiso {permission_name}.")
-
-    user_roles = get_user_roles(user_id)
-    print(f"Roles del usuario {user_id}: {user_roles}")
-
-    if user_roles:
-        role_id = user_roles[0]["ID_Rol"]
-        role_permissions = get_role_permissions(role_id)
-        print(f"Permisos del rol {role_id}: {role_permissions}")

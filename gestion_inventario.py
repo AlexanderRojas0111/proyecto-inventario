@@ -55,7 +55,7 @@ class GestionInventarioApp:
         reference_document_entry = ttk.Entry(self.content_frame)
         reference_document_entry.pack()
 
-        def update():
+        def update_inventory_handler():
             try:
                 product_id = product_id_entry.get()
                 quantity = quantity_entry.get()
@@ -74,7 +74,7 @@ class GestionInventarioApp:
             except Exception as e:
                 messagebox.showerror("Error", f"Error al actualizar el inventario: {e}")
 
-        ttk.Button(self.content_frame, text="Actualizar", command=update).pack()
+        ttk.Button(self.content_frame, text="Actualizar", command=update_inventory_handler).pack()
 
     def show_register_sale(self):
         self.clear_content()
@@ -122,7 +122,7 @@ class GestionInventarioApp:
 
         ttk.Button(sale_details_frame, text="Añadir detalle", command=add_detail).grid(row=4, columnspan=2)
 
-        def register():
+        def register_sale_handler():
             try:
                 sale_id = register_sale(client_entry.get(), payment_method_entry.get(), "Sistema")
                 for detail in sale_details:
@@ -131,7 +131,7 @@ class GestionInventarioApp:
             except Exception as e:
                 messagebox.showerror("Error", f"Error al registrar la venta: {e}")
 
-        ttk.Button(self.content_frame, text="Registrar", command=register).pack()
+        ttk.Button(self.content_frame, text="Registrar", command=register_sale_handler).pack()
 
     def show_register_purchase(self):
         self.clear_content()
@@ -170,7 +170,7 @@ class GestionInventarioApp:
 
         ttk.Button(purchase_details_frame, text="Añadir detalle", command=add_detail).grid(row=3, columnspan=2)
 
-        def register():
+        def register_purchase_handler():
             try:
                 purchase_id = register_purchase(supplier_entry.get(), "Sistema")
                 for detail in purchase_details:
@@ -179,7 +179,7 @@ class GestionInventarioApp:
             except Exception as e:
                 messagebox.showerror("Error", f"Error al registrar la compra: {e}")
 
-        ttk.Button(self.content_frame, text="Registrar", command=register).pack()
+        ttk.Button(self.content_frame, text="Registrar", command=register_purchase_handler).pack()
 
     def show_generate_report(self):
         self.clear_content()
@@ -193,14 +193,15 @@ class GestionInventarioApp:
         end_date_entry = ttk.Entry(self.content_frame)
         end_date_entry.pack()
 
-        def generate():
+        def generate_report_handler():
             try:
                 report = generate_sales_report(start_date_entry.get(), end_date_entry.get())
                 messagebox.showinfo("Reporte Generado", report)
             except Exception as e:
                 messagebox.showerror("Error", f"Error al generar el reporte: {e}")
 
-        ttk.Button(self.content_frame, text="Generar", command=generate).pack()
+        ttk.Button(self.content_frame, text="Generar", command=generate_report_handler).pack()
+
 
 if __name__ == "__main__":
     root = tk.Tk()

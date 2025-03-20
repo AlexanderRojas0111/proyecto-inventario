@@ -1,3 +1,3 @@
 ID_Venta,Fecha,Cliente,Total,Estado,Usuario,Método_Pago,Observaciones
-VENTA-1,2025-02-27 18:47:43.542970,,0,Pendiente,Admin,,
-VENTA-2,2025-02-27 18:47:52.633952,,0,Pendiente,Admin,,
+V001,2023-01-03,Cliente1,150.0,Completo,admin,Efectivo,Venta inicial
+V002,2023-01-04,Cliente2,250.0,Completo,user,Tarjeta,Venta adicional
