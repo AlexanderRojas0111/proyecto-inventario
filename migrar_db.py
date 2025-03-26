@@ -1,154 +1,189 @@
 import csv
 import sqlite3
+import pandas as pd
+
+def connect_db():
+    try:
+        connection = sqlite3.connect('inventario.db')
+        cursor = connection.cursor()
+        return connection, cursor
+    except sqlite3.Error as e:
+        print(f"Ocurrió un error al conectar a la base de datos: {e}")
+        return None, None
+
 
 def main():
-    # Conectar a la base de datos
-    conn = sqlite3.connect('inventario.db')
-    cursor = conn.cursor()
+    connection, cursor = connect_db()
+    try:
+        create_tables(cursor)
+        if load_products(cursor) or load_users(cursor) or load_purchases(cursor) or load_sales(cursor):
+            connection.commit()
+    except sqlite3.Error as e:
+        print(f"Ocurrió un error de base de datos: {e}")
+    except Exception as e:
+        print(f"Ocurrió un error: {e}")
+    finally:
+        print("Cerrando conexión...")
+        cursor.close()
+        connection.close()
 
-    # Crear tabla de productos
+def create_tables(cursor):
     cursor.execute('''
-    CREATE TABLE IF NOT EXISTS products (
-        ID_Producto TEXT PRIMARY KEY,
-        Nombre TEXT,
-        Stock_Actual INTEGER,
-        Stock_Minimo INTEGER,
-        Precio_Unitario REAL
-    )
-    ''')
-
-    # Crear tabla de inventario
+CREATE TABLE IF NOT EXISTS products (
+    ID_Producto TEXT PRIMARY KEY,
+    Nombre TEXT NOT NULL,
+    Stock_Actual INTEGER NOT NULL,
+    Stock_Minimo INTEGER NOT NULL,
+    Precio_Unitario REAL NOT NULL
+)
+''')
     cursor.execute('''
-    CREATE TABLE IF NOT EXISTS inventory (
-        ID INTEGER PRIMARY KEY AUTOINCREMENT,
-        ID_Producto TEXT,
-        Cantidad INTEGER,
-        Tipo_Movimiento TEXT,
-        Usuario TEXT,
-        Descripción TEXT,
-        Documento_Referencia TEXT,
-        Fecha TIMESTAMP
-    )
-    ''')
-
-    # Crear tabla de usuarios
+CREATE TABLE IF NOT EXISTS users (
+    Correo TEXT PRIMARY KEY NOT NULL,
+    Contraseña TEXT NOT NULL,
+    Nombre TEXT NOT NULL
+)
+''')
     cursor.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-        Correo TEXT PRIMARY KEY,
-        Contraseña TEXT,
-        Nombre TEXT
-    )
-    ''')
-
-    # Crear tabla de compras
+CREATE TABLE IF NOT EXISTS purchases (
+    ID_Compra TEXT PRIMARY KEY NOT NULL,
+    Fecha TIMESTAMP,
+    Proveedor TEXT NOT NULL,
+    Total REAL NOT NULL,
+    Estado TEXT NOT NULL,
+    Usuario TEXT NOT NULL,
+    Observaciones TEXT
+)
+''')
     cursor.execute('''
-    CREATE TABLE IF NOT EXISTS purchases (
-        ID_Compra TEXT PRIMARY KEY,
-        Fecha TIMESTAMP,
-        Proveedor TEXT,
-        Total REAL,
-        Estado TEXT,
-        Usuario TEXT,
-        Observaciones TEXT
-    )
-    ''')
+CREATE TABLE IF NOT EXISTS sales (
+    ID_Venta TEXT PRIMARY KEY NOT NULL,
+    Fecha TIMESTAMP,
+    Cliente TEXT NOT NULL,
+    Total REAL NOT NULL,
+    Estado TEXT NOT NULL,
+    Usuario TEXT NOT NULL,
+    Método_Pago TEXT,
+    Observaciones TEXT
+)
+''')
 
-    # Crear tabla de ventas
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS sales (
-        ID_Venta TEXT PRIMARY KEY,
-        Fecha TIMESTAMP,
-        Cliente TEXT,
-        Total REAL,
-        Estado TEXT,
-        Usuario TEXT,
-        Método_Pago TEXT,
-        Observaciones TEXT
-    )
-    ''')
-
-    # Limpiar la tabla de productos antes de insertar nuevos datos
-    cursor.execute('DELETE FROM products')
-
-    # Insertar datos en la tabla de productos
-    with open('data/products.csv', newline='', encoding='utf-8') as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=',')
-        for row in reader:
-            # Verificar si el producto ya existe antes de insertar
-            cursor.execute('SELECT COUNT(*) FROM products WHERE ID_Producto = ?', (row['ID_Producto'],))
-            if cursor.fetchone()[0] == 0:
+def load_products(cursor):
+    try:
+        with open('data/products.csv', newline='', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            cursor.execute('DELETE FROM products')
+            for row in reader:
                 try:
+                    id_producto = row['ID_Producto']
+                    nombre = row['Nombre']
+                    stock_actual = int(row['Stock_Actual'])
+                    stock_minimo = int(row['Stock_Minimo'])
+                    precio_unitario = float(row['Precio_Unitario'])
                     cursor.execute('''
+                        INSERT INTO products (ID_Producto, Nombre, Stock_Actual, Stock_Minimo, Precio_Unitario)
+                        VALUES (?, ?, ?, ?, ?)
+                    ''', (id_producto, nombre, stock_actual, stock_minimo, precio_unitario))
+                except (sqlite3.IntegrityError, ValueError) as e:
+                    print(f"Error al insertar el producto {row}: {e}")
+            return False
+    except FileNotFoundError:
+        print("No se encontró el archivo 'data/products.csv'.")
+        return True
+
+
+    with open('data/products.csv', newline='', encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile)
+        cursor.execute('DELETE FROM products')
+        for row in reader:
+            try:
+                id_producto = row['ID_Producto']
+                nombre = row['Nombre']
+                stock_actual = int(row['Stock_Actual'])
+                stock_minimo = int(row['Stock_Minimo'])
+                precio_unitario = float(row['Precio_Unitario'])
+                cursor.execute('''
                     INSERT INTO products (ID_Producto, Nombre, Stock_Actual, Stock_Minimo, Precio_Unitario)
                     VALUES (?, ?, ?, ?, ?)
-                    ''', (row['ID_Producto'], row['Nombre'], int(row['Stock_Actual']), int(row['Stock_Minimo']), float(row['Precio_Unitario'])))
-                except sqlite3.IntegrityError:
-                    print(f"Error: El producto con ID {row['ID_Producto']} ya existe en la base de datos.")
+                    ''', (id_producto, nombre, stock_actual, stock_minimo, precio_unitario))
+            except (sqlite3.IntegrityError, ValueError) as e:
+                print(f"Error al insertar el producto {row}: {e}")
+                continue
+    return False
 
-    # Limpiar la tabla de usuarios antes de insertar nuevos datos
-    cursor.execute('DELETE FROM users')
-
-    # Insertar datos en la tabla de usuarios
-    with open('data/users.csv', newline='', encoding='utf-8') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            # Verificar si el usuario ya existe antes de insertar
-            cursor.execute('SELECT COUNT(*) FROM users WHERE Correo = ?', (row['Correo'],))
-            if cursor.fetchone()[0] == 0:
+def load_users(cursor):
+    try:
+        with open('data/users.csv', newline='', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            cursor.execute('DELETE FROM users')
+            for row in reader:
                 try:
                     cursor.execute('''
-                    INSERT INTO users (Correo, Contraseña, Nombre)
-                    VALUES (?, ?, ?)
+                        INSERT INTO users (Correo, Contraseña, Nombre)
+                        VALUES (?, ?, ?)
                     ''', (row['Correo'], row['Contraseña'], row['Nombre']))
                 except sqlite3.IntegrityError:
                     print(f"Error: El usuario con correo {row['Correo']} ya existe en la base de datos.")
+            return False
+    except FileNotFoundError:
+        print("No se encontró el archivo 'data/users.csv'.")
+        return True
 
-    # Insertar datos en la tabla de compras
-    with open('data/purchases.csv', newline='', encoding='utf-8') as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=',')
+
+    with open('data/users.csv', newline='', encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile)
+        cursor.execute('DELETE FROM users')
         for row in reader:
             try:
                 cursor.execute('''
+                    INSERT INTO users (Correo, Contraseña, Nombre)
+                    VALUES (?, ?, ?)
+                    ''', (row['Correo'], row['Contraseña'], row['Nombre']))
+            except sqlite3.IntegrityError:
+                print(f"Error: El usuario con correo {row['Correo']} ya existe en la base de datos.")
+                continue
+    return False
+
+def load_purchases(cursor):
+    try:
+        df = pd.read_csv('data/purchases.csv')
+    except Exception as e:
+        print(f"Error al cargar el archivo 'purchases.csv': {e}")
+        return True
+
+    cursor.execute('DELETE FROM purchases')
+    for index, row in df.iterrows():
+        try:
+            cursor.execute('''
                 INSERT INTO purchases (ID_Compra, Fecha, Proveedor, Total, Estado, Usuario, Observaciones)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 ''', (row['ID_Compra'], row['Fecha'], row['Proveedor'], float(row['Total']), row['Estado'], row['Usuario'], row['Observaciones']))
-            except KeyError as e:
-                print(f"Error: La columna {e} no se encuentra en el archivo purchases.csv")
-            except sqlite3.IntegrityError:
-                print(f"Error: La compra con ID {row['ID_Compra']} ya existe en la base de datos.")
+        except sqlite3.IntegrityError:
+            print(f"Error: La compra con ID {row['ID_Compra']} ya existe en la base de datos.")
+            continue
+    return False
 
-    # Crear tabla de detalles de ventas
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS sale_details (
-        ID_Detail INTEGER PRIMARY KEY AUTOINCREMENT,
-        ID_Venta TEXT,
-        ID_Producto TEXT,
-        Cantidad INTEGER,
-        Precio_Unitario REAL,
-        Subtotal REAL,
-        Descuento REAL,
-        FOREIGN KEY (ID_Venta) REFERENCES sales(ID_Venta),
-        FOREIGN KEY (ID_Producto) REFERENCES products(ID_Producto)
-    )
-    ''')
+def load_sales(cursor):
+    try:
+        df = pd.read_csv('data/sales.csv')
+    except Exception as e:
+        print(f"Error al cargar el archivo 'sales.csv': {e}")
+        return True
 
-    # Insertar datos en la tabla de ventas
-    with open('data/sales.csv', newline='', encoding='utf-8') as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=',')
-        for row in reader:
-            try:
-                cursor.execute('''
+    cursor.execute('DELETE FROM sales')
+    for index, row in df.iterrows():
+        try:
+            cursor.execute('''
                 INSERT INTO sales (ID_Venta, Fecha, Cliente, Total, Estado, Usuario, Método_Pago, Observaciones)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (row['ID_Venta'], row['Fecha'], row['Cliente'], float(row['Total']), row['Estado'], row['Usuario'], row['Método_Pago'], row['Observaciones']))
-            except KeyError as e:
-                print(f"Error: La columna {e} no se encuentra en el archivo sales.csv")
-            except sqlite3.IntegrityError:
-                print(f"Error: La venta con ID {row['ID_Venta']} ya existe en la base de datos.")
+        except sqlite3.IntegrityError:
+            print(f"Error: La venta con ID {row['ID_Venta']} ya existe en la base de datos.")
+            continue
+        except sqlite3.IntegrityError:
+            print(f"Error: La venta con ID {row['ID_Venta']} ya existe en la base de datos.")
+            continue
+    return False
 
-    # Guardar cambios y cerrar la conexión
-    conn.commit()
-    conn.close()
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

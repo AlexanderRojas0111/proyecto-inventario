@@ -4,7 +4,8 @@ from inventory import update_inventory
 from sales import register_sale, add_sale_detail
 from purchases import register_purchase, add_purchase_detail
 from reports import generate_sales_report
-from user_management import authenticate_user
+from user_management import UserManager
+import sqlite3
 
 class GestionInventarioApp:
     def __init__(self, root):
@@ -12,7 +13,8 @@ class GestionInventarioApp:
         self.root.title("Sistema de Gestión de Inventario")
         self.root.geometry("800x600")
 
-        self.user = authenticate_user("admin@example.com", "password")
+        user_manager = UserManager()
+        self.user = user_manager.authenticate_user("admin@example.com", "password")
         if not self.user:
             messagebox.showerror("Error", "Autenticación fallida.")
             root.destroy()
