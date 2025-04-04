@@ -1,74 +1,91 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, call
 import sqlite3
-from data_manager import execute_query, fetch_all, fetch_one, load_data, save_data
+from data_manager import (
+    execute_query, fetch_all, fetch_one, load_data, save_data,
+    SQLiteRepository, DatabaseException, ConnectionError, QueryExecutionError
+)
 
-class TestDataManager(unittest.TestCase):
+class TestSQLiteRepository(unittest.TestCase):
+    def setUp(self):
+        self.repo = SQLiteRepository()
+        self.repo.connection = MagicMock()
+        self.repo.logger = MagicMock()
 
-    @patch('data_manager.sqlite3.connect')
-    def test_execute_query(self, mock_connect):
-        mock_conn = MagicMock()
-        mock_connect.return_value = mock_conn
-        mock_cursor = mock_conn.cursor.return_value
+    def test_singleton_pattern(self):
+        repo1 = SQLiteRepository()
+        repo2 = SQLiteRepository()
+        self.assertIs(repo1, repo2)
 
-        query = "INSERT INTO test_table (col1, col2) VALUES (?, ?)"
-        params = ("value1", "value2")
-        execute_query(query, params)
-
+    def test_execute_success(self):
+        mock_cursor = MagicMock()
+        self.repo.connection.cursor.return_value = mock_cursor
+        
+        query = "INSERT INTO test VALUES (?, ?)"
+        params = (1, "test")
+        result = self.repo.execute(query, params)
+        
         mock_cursor.execute.assert_called_once_with(query, params)
-        mock_conn.commit.assert_called_once()
+        self.repo.connection.commit.assert_called_once()
+        self.assertEqual(result, mock_cursor)
+        self.repo.logger.debug.assert_called()
 
-    @patch('data_manager.sqlite3.connect')
-    def test_fetch_all(self, mock_connect):
-        mock_conn = MagicMock()
-        mock_connect.return_value = mock_conn
-        mock_cursor = mock_conn.cursor.return_value
-        mock_cursor.fetchall.return_value = [("row1_col1", "row1_col2"), ("row2_col1", "row2_col2")]
+    def test_execute_failure(self):
+        self.repo.connection.cursor.side_effect = sqlite3.Error("Test error")
+        
+        with self.assertRaises(QueryExecutionError):
+            self.repo.execute("BAD QUERY")
+        
+        self.repo.logger.error.assert_called()
 
-        query = "SELECT * FROM test_table"
-        result = fetch_all(query)
+    def test_fetch_all_success(self):
+        expected = [("row1",), ("row2",)]
+        mock_cursor = MagicMock()
+        mock_cursor.fetchall.return_value = expected
+        self.repo.connection.cursor.return_value = mock_cursor
+        
+        result = self.repo.fetch_all("SELECT * FROM test")
+        
+        self.assertEqual(result, expected)
+        self.repo.logger.debug.assert_called()
 
-        mock_cursor.execute.assert_called_once_with(query, ())
-        self.assertEqual(result, [("row1_col1", "row1_col2"), ("row2_col1", "row2_col2")])
+    def test_save_bulk_empty_data(self):
+        self.repo.save_bulk("test", [])
+        self.repo.logger.warning.assert_called()
 
-    @patch('data_manager.sqlite3.connect')
-    def test_fetch_one(self, mock_connect):
-        mock_conn = MagicMock()
-        mock_connect.return_value = mock_conn
-        mock_cursor = mock_conn.cursor.return_value
-        mock_cursor.fetchone.return_value = ("row1_col1", "row1_col2")
+class TestLegacyFunctions(unittest.TestCase):
+    @patch('data_manager.SQLiteRepository')
+    def test_execute_query(self, mock_repo):
+        mock_instance = mock_repo.return_value
+        execute_query("test", (1,))
+        mock_instance.execute.assert_called_once_with("test", (1,))
 
-        query = "SELECT * FROM test_table WHERE col1 = ?"
-        params = ("value1",)
-        result = fetch_one(query, params)
+    @patch('data_manager.SQLiteRepository')
+    def test_fetch_all(self, mock_repo):
+        mock_instance = mock_repo.return_value
+        fetch_all("test", (1,))
+        mock_instance.fetch_all.assert_called_once_with("test", (1,))
 
-        mock_cursor.execute.assert_called_once_with(query, params)
-        self.assertEqual(result, ("row1_col1", "row1_col2"))
+    @patch('data_manager.SQLiteRepository')
+    def test_save_data(self, mock_repo):
+        mock_instance = mock_repo.return_value
+        data = [("test",)]
+        save_data("table", data)
+        mock_instance.save_bulk.assert_called_once_with("table", data)
 
-    @patch('data_manager.fetch_all')
-    def test_load_data(self, mock_fetch_all):
-        mock_fetch_all.return_value = [("row1_col1", "row1_col2"), ("row2_col1", "row2_col2")]
+class TestExceptionHandling(unittest.TestCase):
+    def test_connection_error(self):
+        with patch('data_manager.sqlite3.connect', side_effect=sqlite3.Error("Connection failed")):
+            with self.assertRaises(ConnectionError):
+                repo = SQLiteRepository()
 
-        table_name = "test_table"
-        result = load_data(table_name)
-
-        mock_fetch_all.assert_called_once_with(f"SELECT * FROM {table_name}")
-        self.assertEqual(result, [("row1_col1", "row1_col2"), ("row2_col1", "row2_col2")])
-
-    @patch('data_manager.sqlite3.connect')
-    def test_save_data(self, mock_connect):
-        mock_conn = MagicMock()
-        mock_connect.return_value = mock_conn
-        mock_cursor = mock_conn.cursor.return_value
-
-        table_name = "test_table"
-        data = [("value1", "value2"), ("value3", "value4")]
-        save_data(table_name, data)
-
-        placeholders = ', '.join(['?'] * len(data[0]))
-        query = f"INSERT INTO {table_name} VALUES ({placeholders})"
-        mock_cursor.executemany.assert_called_once_with(query, data)
-        mock_conn.commit.assert_called_once()
+    def test_query_execution_error(self):
+        repo = SQLiteRepository()
+        repo.connection = MagicMock()
+        repo.connection.cursor.side_effect = sqlite3.Error("Query failed")
+        
+        with self.assertRaises(QueryExecutionError):
+            repo.execute("BAD QUERY")
 
 if __name__ == "__main__":
     unittest.main()

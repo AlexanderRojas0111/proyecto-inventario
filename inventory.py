@@ -1,4 +1,34 @@
+from abc import ABC, abstractmethod
 from data_manager import execute_query, fetch_all, fetch_one
+from typing import List
+
+class InventoryObserver(ABC):
+    """Interfaz para el patrón Observer de notificaciones de inventario"""
+    @abstractmethod
+    def on_inventory_update(self, product_id: str, movement_type: str, quantity: int):
+        pass
+
+class InventorySubject:
+    """Sujeto observable para cambios en el inventario"""
+    _observers: List[InventoryObserver] = []
+    
+    @classmethod
+    def attach(cls, observer: InventoryObserver) -> None:
+        """Añade un observador"""
+        if observer not in cls._observers:
+            cls._observers.append(observer)
+    
+    @classmethod
+    def detach(cls, observer: InventoryObserver) -> None:
+        """Elimina un observador"""
+        if observer in cls._observers:
+            cls._observers.remove(observer)
+    
+    @classmethod
+    def notify(cls, product_id: str, movement_type: str, quantity: int) -> None:
+        """Notifica a todos los observadores"""
+        for observer in cls._observers:
+            observer.on_inventory_update(product_id, movement_type, quantity)
 
 def update_inventory(product_id, quantity, movement_type, user, description, reference_document):
     """Actualiza el inventario con un movimiento de entrada o salida."""
@@ -8,9 +38,35 @@ def update_inventory(product_id, quantity, movement_type, user, description, ref
         VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
         '''
         execute_query(query, (product_id, quantity, movement_type, user, description, reference_document))
+        
+        # Notificar a los observadores
+        InventorySubject.notify(product_id, movement_type, quantity)
     except Exception as e:
         print(f"Error al actualizar el inventario: {e}")
 
+def adjust_inventory(product_id, new_quantity, user, reason):
+    """Realiza un ajuste de inventario cuando hay discrepancias."""
+    try:
+        query = 'SELECT Stock_Actual FROM products WHERE ID_Producto = ?'
+        result = fetch_one(query, (product_id,))
+        if not result:
+            return False
+            
+        current_stock = result[0]
+        difference = new_quantity - current_stock
+        movement_type = "Entrada" if difference > 0 else "Salida"
+        
+        update_inventory(product_id, abs(difference), movement_type, user, 
+                        f"Ajuste de inventario: {reason}", "Ajuste manual")
+        
+        query = 'UPDATE products SET Stock_Actual = ? WHERE ID_Producto = ?'
+        execute_query(query, (new_quantity, product_id))
+        return True
+    except Exception as e:
+        print(f"Error al ajustar el inventario: {e}")
+        return False
+
+# Funciones existentes (sin cambios)
 def get_current_stock(product_id=None):
     """Obtiene el stock actual de un producto específico o de todos los productos."""
     try:
@@ -60,21 +116,3 @@ def calculate_inventory_value():
     except Exception as e:
         print(f"Error al calcular el valor del inventario: {e}")
         return 0.0
-
-def adjust_inventory(product_id, new_quantity, user, reason):
-    """Realiza un ajuste de inventario cuando hay discrepancias."""
-    try:
-        query = 'SELECT Stock_Actual FROM products WHERE ID_Producto = ?'
-        result = fetch_one(query, (product_id,))
-        if not result:
-            return False
-        current_stock = result[0]
-        difference = new_quantity - current_stock
-        movement_type = "Entrada" if difference > 0 else "Salida"
-        update_inventory(product_id, abs(difference), movement_type, user, f"Ajuste de inventario: {reason}", "Ajuste manual")
-        query = 'UPDATE products SET Stock_Actual = ? WHERE ID_Producto = ?'
-        execute_query(query, (new_quantity, product_id))
-        return True
-    except Exception as e:
-        print(f"Error al ajustar el inventario: {e}")
-        return False
