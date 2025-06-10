@@ -1,5 +1,5 @@
 import unittest
-from inventory import update_inventory, get_current_stock, get_low_stock_products, get_product_movements, calculate_inventory_value, adjust_inventory
+from app.inventory import update_inventory, get_current_stock, get_low_stock_products, get_product_movements, calculate_inventory_value, adjust_inventory
 
 class TestInventoryManagement(unittest.TestCase):
     def setUp(self):

@@ -1,15 +1,22 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from inventory import update_inventory, get_current_stock, get_low_stock_products, get_product_movements, calculate_inventory_value, adjust_inventory
-from sales import register_sale, add_sale_detail
-from purchases import register_purchase, add_purchase_detail
-from reports import generate_sales_report
+from app.inventory import update_inventory, get_current_stock, get_low_stock_products, get_product_movements, calculate_inventory_value, adjust_inventory
+from app.sales import register_sale, add_sale_detail
+from app.purchases import register_purchase, add_purchase_detail
+from app.reports import generate_sales_report
+from app.user_management import authenticate_user
 
 class GestionInventarioApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Sistema de Gestión de Inventario")
         self.root.geometry("800x600")
+
+        self.user = authenticate_user("admin@example.com", "password")
+        if not self.user:
+            messagebox.showerror("Error", "Autenticación fallida.")
+            root.destroy()
+            return
 
         self.create_menu()
         self.create_content_frame()
@@ -67,7 +74,7 @@ class GestionInventarioApp:
                     messagebox.showerror("Error", "Todos los campos son obligatorios.")
                     return
 
-                update_inventory(product_id, int(quantity), movement_type, "Sistema", description, reference_document)
+                update_inventory(product_id, int(quantity), movement_type, self.user["name"], description, reference_document)
                 messagebox.showinfo("Info", "Inventario actualizado.")
             except ValueError:
                 messagebox.showerror("Error", "Cantidad debe ser un número entero.")
@@ -124,7 +131,7 @@ class GestionInventarioApp:
 
         def register():
             try:
-                sale_id = register_sale(client_entry.get(), payment_method_entry.get(), "Sistema")
+                sale_id = register_sale(client_entry.get(), payment_method_entry.get(), self.user["name"])
                 for detail in sale_details:
                     add_sale_detail(sale_id, *detail)
                 messagebox.showinfo("Info", "Venta registrada.")
@@ -172,7 +179,7 @@ class GestionInventarioApp:
 
         def register():
             try:
-                purchase_id = register_purchase(supplier_entry.get(), "Sistema")
+                purchase_id = register_purchase(supplier_entry.get(), self.user["name"])
                 for detail in purchase_details:
                     add_purchase_detail(purchase_id, *detail)
                 messagebox.showinfo("Info", "Compra registrada.")
