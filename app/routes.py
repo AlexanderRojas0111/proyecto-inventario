@@ -1,13 +1,14 @@
 from flask import request, jsonify
 from app import app, db
-from app.user_management import authenticate_user, register_user
+from app.user_management import UserManager
 from app.inventory import update_inventory
 from app.sales import register_sale, add_sale_detail
 from app.purchases import register_purchase, add_purchase_detail
 from app.reports import generate_sales_report
-from app.schemas import UserSchema, LoginSchema  # Importar LoginSchema
-from marshmallow import ValidationError  # Importar ValidationError
-from app.auth import generate_token  # Importar generate_token
+from app.schemas import UserSchema, LoginSchema
+from marshmallow import ValidationError
+from app.auth import generate_token
+from unittest.mock import patch
 
 @app.route('/')
 def index():
@@ -16,29 +17,17 @@ def index():
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-    try:
-        UserSchema().load(data)
-    except ValidationError as err:
-        return jsonify(err.messages), 400
-    email = data.get('email')
-    password = data.get('password')
-    name = data.get('name')
-    register_user(email, password, name)
+    # ...validación...
+    UserManager.register_user(data['email'], data['password'], data['name'])
     return jsonify({"message": "User registered successfully"}), 201
 
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    try:
-        LoginSchema().load(data)
-    except ValidationError as err:
-        return jsonify(err.messages), 400
-    user = authenticate_user(data['email'], data['password'])
+    user = UserManager.authenticate_user(data['email'], data['password'])
     if user:
-        token = generate_token(user['email'])
-        return jsonify({"message": "Login successful", "token": token}), 200
-    else:
-        return jsonify({"message": "Invalid credentials"}), 401
+        # ...
+        pass
 
 @app.route('/inventory/update', methods=['POST'])
 def update_inventory_route():

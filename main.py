@@ -4,7 +4,8 @@ from app.inventory import update_inventory
 from app.sales import register_sale, add_sale_detail
 from app.purchases import register_purchase, add_purchase_detail
 from app.reports import generate_sales_report
-from app.user_management import authenticate_user
+from app.user_management import UserManager
+import sqlite3
 
 class GestionInventarioApp:
     def __init__(self, root):
@@ -12,7 +13,8 @@ class GestionInventarioApp:
         self.root.title("Sistema de Gestión de Inventario")
         self.root.geometry("800x600")
 
-        self.user = authenticate_user("admin@example.com", "password")
+        user_manager = UserManager()
+        self.user = user_manager.authenticate_user("admin@example.com", "password")
         if not self.user:
             messagebox.showerror("Error", "Autenticación fallida.")
             root.destroy()
@@ -212,6 +214,9 @@ class GestionInventarioApp:
             messagebox.showinfo("Reporte Generado", report)
 
         ttk.Button(self.content_frame, text="Generar", command=generate).pack()
+
+def mi_funcion():
+    print("Versión remota")
 
 if __name__ == "__main__":
     root = tk.Tk()

@@ -1,2 +1,8 @@
+<<<<<<< HEAD
 ID_Compra,ID_Producto,Fecha,Proveedor,Total,Estado,Usuario,Observaciones
 COMPRA-1,P001,2025-02-27 18:54:02.036509,Proveedor1,100,Pendiente,Admin,Sin observaciones
+=======
+ID_Compra,Fecha,Proveedor,Total,Estado,Usuario,Observaciones
+C001,2023-01-01,Proveedor1,100.0,Completo,admin,Compra inicial
+C002,2023-01-02,Proveedor2,200.0,Completo,user,Compra adicional
+>>>>>>> c78e6b52bc7d26d1ed819ed8ad0afc2dd8268633

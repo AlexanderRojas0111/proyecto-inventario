@@ -1,13 +1,9 @@
 import unittest
-from unittest.mock import patch, MagicMock
 import tkinter as tk
-from gestion_inventario import GestionInventarioApp
+from unittest.mock import patch
+from gestion_inventario import app  # Asegúrate de que la importación sea correcta
 
 class TestGestionInventarioApp(unittest.TestCase):
-    @patch('tkinter.Tk')
-    def setUp(self, mock_tk):
-        self.root = mock_tk()
-        self.app = GestionInventarioApp(self.root)
 
     def tearDown(self):
         if self.root:
