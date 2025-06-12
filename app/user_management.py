@@ -3,12 +3,13 @@ from flask_bcrypt import Bcrypt
 from app.data_manager import execute_query, fetch_one
 
 bcrypt = Bcrypt()
-DATABASE = 'inventario.db'
+DATABASE = "inventario.db"
+
 
 class UserManager:
     @staticmethod
     def hash_password(password):
-        return bcrypt.generate_password_hash(password).decode('utf-8')
+        return bcrypt.generate_password_hash(password).decode("utf-8")
 
     @staticmethod
     def check_password(hashed_password, user_password):
@@ -16,12 +17,12 @@ class UserManager:
 
     @staticmethod
     def authenticate_user(email, password):
-        query = '''
+        query = """
         SELECT * FROM users WHERE Correo = ?
-        '''
+        """
         user = fetch_one(query, (email,))
-        if user and UserManager.check_password(user['Contraseña'], password):
-            return {'email': user['Correo'], 'name': user['Nombre']}
+        if user and UserManager.check_password(user["Contraseña"], password):
+            return {"email": user["Correo"], "name": user["Nombre"]}
         return None
 
     @staticmethod
@@ -30,7 +31,10 @@ class UserManager:
         cursor = conn.cursor()
         hashed_password = UserManager.hash_password(password)
         try:
-            cursor.execute("INSERT INTO users (Correo, Contraseña, Nombre) VALUES (?, ?, ?)", (email, hashed_password, name))
+            cursor.execute(
+                "INSERT INTO users (Correo, Contraseña, Nombre) VALUES (?, ?, ?)",
+                (email, hashed_password, name),
+            )
             conn.commit()
             print(f"Usuario registrado: {email}")
         except sqlite3.IntegrityError:

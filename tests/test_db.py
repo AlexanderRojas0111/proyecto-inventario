@@ -1,17 +1,27 @@
 import unittest
-from app.inventory import update_inventory, get_current_stock, get_low_stock_products, get_product_movements, calculate_inventory_value, adjust_inventory
+from app.inventory import (
+    update_inventory,
+    get_current_stock,
+    get_low_stock_products,
+    get_product_movements,
+    calculate_inventory_value,
+    adjust_inventory,
+)
+
 
 class TestInventoryManagement(unittest.TestCase):
     def setUp(self):
         # Configurar la base de datos para pruebas
-        self.database = 'inventario_test.db'
+        self.database = "inventario_test.db"
         self.setup_database()
 
     def setup_database(self):
         import sqlite3
+
         conn = sqlite3.connect(self.database)
         cursor = conn.cursor()
-        cursor.execute('''
+        cursor.execute(
+            """
         CREATE TABLE IF NOT EXISTS products (
             ID_Producto TEXT PRIMARY KEY,
             Nombre TEXT,
@@ -19,8 +29,10 @@ class TestInventoryManagement(unittest.TestCase):
             Stock_Minimo INTEGER,
             Precio_Unitario REAL
         )
-        ''')
-        cursor.execute('''
+        """
+        )
+        cursor.execute(
+            """
         CREATE TABLE IF NOT EXISTS inventory (
             ID INTEGER PRIMARY KEY AUTOINCREMENT,
             ID_Producto TEXT,
@@ -31,15 +43,19 @@ class TestInventoryManagement(unittest.TestCase):
             Documento_Referencia TEXT,
             Fecha TIMESTAMP
         )
-        ''')
-        cursor.execute('''
+        """
+        )
+        cursor.execute(
+            """
         CREATE TABLE IF NOT EXISTS users (
             Correo TEXT PRIMARY KEY,
             Contraseña TEXT,
             Nombre TEXT
         )
-        ''')
-        cursor.execute('''
+        """
+        )
+        cursor.execute(
+            """
         CREATE TABLE IF NOT EXISTS purchases (
             ID_Compra TEXT PRIMARY KEY,
             Fecha TIMESTAMP,
@@ -49,8 +65,10 @@ class TestInventoryManagement(unittest.TestCase):
             Usuario TEXT,
             Observaciones TEXT
         )
-        ''')
-        cursor.execute('''
+        """
+        )
+        cursor.execute(
+            """
         CREATE TABLE IF NOT EXISTS sales (
             ID_Venta TEXT PRIMARY KEY,
             Fecha TIMESTAMP,
@@ -61,7 +79,8 @@ class TestInventoryManagement(unittest.TestCase):
             Método_Pago TEXT,
             Observaciones TEXT
         )
-        ''')
+        """
+        )
         conn.commit()
         conn.close()
 
@@ -83,7 +102,9 @@ class TestInventoryManagement(unittest.TestCase):
     def test_get_low_stock_products(self):
         try:
             low_stock_products = get_low_stock_products()
-            self.assertIsInstance(low_stock_products, list, "El resultado debería ser una lista")
+            self.assertIsInstance(
+                low_stock_products, list, "El resultado debería ser una lista"
+            )
             print("Prueba de obtención de productos con bajo stock exitosa.")
         except Exception as e:
             self.fail(f"Prueba de obtención de productos con bajo stock fallida: {e}")
@@ -111,6 +132,7 @@ class TestInventoryManagement(unittest.TestCase):
             print("Prueba de ajuste de inventario exitosa.")
         except Exception as e:
             self.fail(f"Prueba de ajuste de inventario fallida: {e}")
+
 
 if __name__ == "__main__":
     unittest.main()

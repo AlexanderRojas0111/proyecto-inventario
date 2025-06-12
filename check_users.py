@@ -1,6 +1,7 @@
 import sqlite3
 
-DATABASE = 'inventario.db'
+DATABASE = "inventario.db"
+
 
 def check_users():
     conn = sqlite3.connect(DATABASE)
@@ -10,6 +11,7 @@ def check_users():
     for user in users:
         print(user)
     conn.close()
+
 
 if __name__ == "__main__":
     check_users()

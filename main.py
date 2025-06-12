@@ -7,6 +7,7 @@ from app.reports import generate_sales_report
 from app.user_management import UserManager
 import sqlite3
 
+
 class GestionInventarioApp:
     def __init__(self, root):
         self.root = root
@@ -27,10 +28,18 @@ class GestionInventarioApp:
         frame_menu = ttk.Frame(self.root, padding=10)
         frame_menu.pack(side=tk.TOP, fill=tk.X)
 
-        ttk.Button(frame_menu, text="Actualizar Inventario", command=self.show_update_inventory).pack(side=tk.LEFT)
-        ttk.Button(frame_menu, text="Registrar Venta", command=self.show_register_sale).pack(side=tk.LEFT)
-        ttk.Button(frame_menu, text="Registrar Compra", command=self.show_register_purchase).pack(side=tk.LEFT)
-        ttk.Button(frame_menu, text="Generar Reporte", command=self.show_generate_report).pack(side=tk.LEFT)
+        ttk.Button(
+            frame_menu, text="Actualizar Inventario", command=self.show_update_inventory
+        ).pack(side=tk.LEFT)
+        ttk.Button(
+            frame_menu, text="Registrar Venta", command=self.show_register_sale
+        ).pack(side=tk.LEFT)
+        ttk.Button(
+            frame_menu, text="Registrar Compra", command=self.show_register_purchase
+        ).pack(side=tk.LEFT)
+        ttk.Button(
+            frame_menu, text="Generar Reporte", command=self.show_generate_report
+        ).pack(side=tk.LEFT)
 
     def create_content_frame(self):
         self.content_frame = ttk.Frame(self.root, padding=10)
@@ -42,7 +51,9 @@ class GestionInventarioApp:
 
     def show_update_inventory(self):
         self.clear_content()
-        ttk.Label(self.content_frame, text="Actualizar Inventario", font=("Arial", 16)).pack()
+        ttk.Label(
+            self.content_frame, text="Actualizar Inventario", font=("Arial", 16)
+        ).pack()
 
         ttk.Label(self.content_frame, text="ID del producto:").pack()
         product_id_entry = ttk.Entry(self.content_frame)
@@ -52,7 +63,9 @@ class GestionInventarioApp:
         quantity_entry = ttk.Entry(self.content_frame)
         quantity_entry.pack()
 
-        ttk.Label(self.content_frame, text="Tipo de movimiento (Entrada/Salida):").pack()
+        ttk.Label(
+            self.content_frame, text="Tipo de movimiento (Entrada/Salida):"
+        ).pack()
         movement_type_entry = ttk.Entry(self.content_frame)
         movement_type_entry.pack()
 
@@ -72,11 +85,24 @@ class GestionInventarioApp:
                 description = description_entry.get()
                 reference_document = reference_document_entry.get()
 
-                if not product_id or not quantity or not movement_type or not description or not reference_document:
+                if (
+                    not product_id
+                    or not quantity
+                    or not movement_type
+                    or not description
+                    or not reference_document
+                ):
                     messagebox.showerror("Error", "Todos los campos son obligatorios.")
                     return
 
-                update_inventory(product_id, int(quantity), movement_type, self.user["name"], description, reference_document)
+                update_inventory(
+                    product_id,
+                    int(quantity),
+                    movement_type,
+                    self.user["name"],
+                    description,
+                    reference_document,
+                )
                 messagebox.showinfo("Info", "Inventario actualizado.")
             except ValueError:
                 messagebox.showerror("Error", "Cantidad debe ser un número entero.")
@@ -109,10 +135,15 @@ class GestionInventarioApp:
                 price_unit = float(price_unit_entry.get())
                 discount = float(discount_entry.get())
                 subtotal = quantity * price_unit - discount
-                sale_details.append((product_id, quantity, price_unit, subtotal, discount))
+                sale_details.append(
+                    (product_id, quantity, price_unit, subtotal, discount)
+                )
                 messagebox.showinfo("Info", "Detalle añadido.")
             except ValueError:
-                messagebox.showerror("Error", "Por favor, ingrese valores válidos para cantidad, precio unitario y descuento.")
+                messagebox.showerror(
+                    "Error",
+                    "Por favor, ingrese valores válidos para cantidad, precio unitario y descuento.",
+                )
 
         ttk.Label(sale_details_frame, text="ID del producto:").grid(row=0, column=0)
         product_id_entry = ttk.Entry(sale_details_frame)
@@ -130,11 +161,15 @@ class GestionInventarioApp:
         discount_entry = ttk.Entry(sale_details_frame)
         discount_entry.grid(row=3, column=1)
 
-        ttk.Button(sale_details_frame, text="Añadir detalle", command=add_detail).grid(row=4, columnspan=2)
+        ttk.Button(sale_details_frame, text="Añadir detalle", command=add_detail).grid(
+            row=4, columnspan=2
+        )
 
         def register():
             try:
-                sale_id = register_sale(client_entry.get(), payment_method_entry.get(), self.user["name"])
+                sale_id = register_sale(
+                    client_entry.get(), payment_method_entry.get(), self.user["name"]
+                )
                 for detail in sale_details:
                     add_sale_detail(sale_id, *detail)
                 messagebox.showinfo("Info", "Venta registrada.")
@@ -145,7 +180,9 @@ class GestionInventarioApp:
 
     def show_register_purchase(self):
         self.clear_content()
-        ttk.Label(self.content_frame, text="Registrar Compra", font=("Arial", 16)).pack()
+        ttk.Label(
+            self.content_frame, text="Registrar Compra", font=("Arial", 16)
+        ).pack()
 
         ttk.Label(self.content_frame, text="Nombre del proveedor:").pack()
         supplier_entry = ttk.Entry(self.content_frame)
@@ -165,7 +202,10 @@ class GestionInventarioApp:
                 purchase_details.append((product_id, quantity, price_unit, subtotal))
                 messagebox.showinfo("Info", "Detalle añadido.")
             except ValueError:
-                messagebox.showerror("Error", "Por favor, ingrese valores válidos para cantidad y precio unitario.")
+                messagebox.showerror(
+                    "Error",
+                    "Por favor, ingrese valores válidos para cantidad y precio unitario.",
+                )
 
         ttk.Label(purchase_details_frame, text="ID del producto:").grid(row=0, column=0)
         product_id_entry = ttk.Entry(purchase_details_frame)
@@ -179,7 +219,9 @@ class GestionInventarioApp:
         price_unit_entry = ttk.Entry(purchase_details_frame)
         price_unit_entry.grid(row=2, column=1)
 
-        ttk.Button(purchase_details_frame, text="Añadir detalle", command=add_detail).grid(row=3, columnspan=2)
+        ttk.Button(
+            purchase_details_frame, text="Añadir detalle", command=add_detail
+        ).grid(row=3, columnspan=2)
 
         def register():
             try:
@@ -187,7 +229,9 @@ class GestionInventarioApp:
                 quantity = int(quantity_entry.get())
                 price_unit = float(price_unit_entry.get())
                 cost = quantity * price_unit  # Calcular el costo
-                purchase_id = register_purchase(product_id, quantity, supplier_entry.get(), cost)  # Llamar con los parámetros correctos
+                purchase_id = register_purchase(
+                    product_id, quantity, supplier_entry.get(), cost
+                )  # Llamar con los parámetros correctos
 
                 for detail in purchase_details:
                     add_purchase_detail(purchase_id, *detail)
@@ -215,8 +259,10 @@ class GestionInventarioApp:
 
         ttk.Button(self.content_frame, text="Generar", command=generate).pack()
 
+
 def mi_funcion():
     print("Versión remota")
+
 
 if __name__ == "__main__":
     root = tk.Tk()

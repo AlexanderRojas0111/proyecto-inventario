@@ -1,9 +1,11 @@
 import sqlite3
 
-DATABASE = 'inventario.db'
+DATABASE = "inventario.db"
+
 
 def get_db_connection():
     return sqlite3.connect(DATABASE)
+
 
 def execute_query(query, params=()):
     conn = get_db_connection()
@@ -17,6 +19,7 @@ def execute_query(query, params=()):
         return None
     finally:
         conn.close()
+
 
 def fetch_one(query, params=()):
     conn = get_db_connection()
@@ -35,6 +38,7 @@ def fetch_one(query, params=()):
         return None
     finally:
         conn.close()
+
 
 def fetch_all(query, params=()):
     conn = get_db_connection()
